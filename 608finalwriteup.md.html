@@ -1,0 +1,946 @@
+<meta charset="utf-8" emacsmode="-*- markdown -*-">
+**6.08 Team 100 Final Report: ZOOM 2**
+<center>**Tejal Reddy, Dylan Weber, Lucian Covarrubias, Marvin Zetina, Kristen Palmer**</center>
+
+Synopsis
+===============================================================================
+
+For our final project, we will be implementing a virtual world. The purpose of this virtual world is to help connect people during our time in quarantine. At start up, the player will be directed to either log in or sign up on a web app. If they choose to sign up, each player will 
+be able to create and customize their own avatar. If a player already has an account, then they will still be able to modify their avatar as well. After an avatar is created, the player can login to their account on their device. The player's avatar will “live” on a home screen. 
+On this home screen, the avatar will be able to move around based on where they move the mouse on their joystick. Their avatar will also be able to perform many actions (ex: waving, t-pose, moving all limbs, etc) by pressing the buttons on the device. From this home screen, the player will have a wide 
+array of actions to take. The first thing the player can do is send a friend request to another user. They will also be able to accept or decline any friend requests sent to them. After navigating back to the home screen, the player can also send text messages to their friends in the virtual world. The player will also be able to check if they have any text messages 
+which were sent to them. Lastly, the player can visit friends in breakout rooms. To do this, a player can invite up to four of their friends to a breakout room. They can also accept any breakout room invitations they have pending. 
+Once a player accepts/sends an invitation, the other player's avatar will appear on their screen and vice versa. The avatars of both players will move in real time on both the player's screens. Each player will also be able to see
+all of the actions (ex: waving, t-pose, etc) that the other players' avatar makes. 
+
+Overview
+===============================================================================
+The system for our project consists of two main parts, the ESP side and the server side. On the ESP side, we have one main file called UI.ino, which inherits many other files that contain class and function declarations that are used to create the various functionalities that we wanted to implement. In this main file, we have a state machine that handles the navigation between different pages and smaller applications within our large project, such as texting and breakout rooms. Within this state machine, we invoke many of the other functions that may even contain smaller state machines, which we will elaborate on in our state machine diagrams later. On the server side, we have multiple files that are accessed to store, transmit, and interact with all the information that we need in order to fully represent avatars on another user's screen. 
+
+Video Demo
+===============================================================================
+![Final Project Video](https://youtu.be/KIvKus7YLXY)
+
+GitHub Link
+===============================================================================
+[Final Project Repository](https://github.mit.edu/dylanweb/6.08-team-100)
+
+System Block Diagram
+-------------------------------------------------------------------------------
+<svg width="647pt" height="442pt" viewBox="0.00 0.00 646.92 442.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 438)">
+  <title>state transitions</title>
+  <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-438 642.922,-438 642.922,4 -4,4"></polygon>
+  <g id="clust1" class="cluster">
+  <title>cluster_Physical Inputs</title>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M55,-344C55,-344 295,-344 295,-344 301,-344 307,-350 307,-356 307,-356 307,-414 307,-414 307,-420 301,-426 295,-426 295,-426 55,-426 55,-426 49,-426 43,-420 43,-414 43,-414 43,-356 43,-356 43,-350 49,-344 55,-344"></path>
+  <text text-anchor="start" x="134.6566" y="-407.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Physical Inputs</text>
+  </g>
+  <g id="clust2" class="cluster">
+  <title>cluster_Online</title>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M20,-8C20,-8 415,-8 415,-8 421,-8 427,-14 427,-20 427,-20 427,-192 427,-192 427,-198 421,-204 415,-204 415,-204 20,-204 20,-204 14,-204 8,-198 8,-192 8,-192 8,-20 8,-20 8,-14 14,-8 20,-8"></path>
+  <text text-anchor="start" x="200.1636" y="-185.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Online</text>
+  </g>
+  <g id="clust3" class="cluster">
+  <title>cluster_Outputs</title>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M489,-122C489,-122 559,-122 559,-122 565,-122 571,-128 571,-134 571,-134 571,-192 571,-192 571,-198 565,-204 559,-204 559,-204 489,-204 489,-204 483,-204 477,-198 477,-192 477,-192 477,-134 477,-134 477,-128 483,-122 489,-122"></path>
+  <text text-anchor="start" x="502.9916" y="-185.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Outputs</text>
+  </g>
+  <!-- ESP32 -->
+  <g id="node1" class="node">
+  <title>ESP32</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="328.5,-292 269.5,-292 269.5,-256 328.5,-256 328.5,-292"></polygon>
+  <text text-anchor="start" x="280.825" y="-270.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">ESP32</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M281.8333,-257C281.8333,-257 316.1667,-257 316.1667,-257 321.8333,-257 327.5,-262.6667 327.5,-268.3333 327.5,-268.3333 327.5,-279.6667 327.5,-279.6667 327.5,-285.3333 321.8333,-291 316.1667,-291 316.1667,-291 281.8333,-291 281.8333,-291 276.1667,-291 270.5,-285.3333 270.5,-279.6667 270.5,-279.6667 270.5,-268.3333 270.5,-268.3333 270.5,-262.6667 276.1667,-257 281.8333,-257"></path>
+  </g>
+  <!-- Server Backend -->
+  <g id="node7" class="node">
+  <title>Server Backend</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="228.5,-166 121.5,-166 121.5,-130 228.5,-130 228.5,-166"></polygon>
+  <text text-anchor="start" x="132.8226" y="-144.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Server Backend</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M133.8333,-131C133.8333,-131 216.1667,-131 216.1667,-131 221.8333,-131 227.5,-136.6667 227.5,-142.3333 227.5,-142.3333 227.5,-153.6667 227.5,-153.6667 227.5,-159.3333 221.8333,-165 216.1667,-165 216.1667,-165 133.8333,-165 133.8333,-165 128.1667,-165 122.5,-159.3333 122.5,-153.6667 122.5,-153.6667 122.5,-142.3333 122.5,-142.3333 122.5,-136.6667 128.1667,-131 133.8333,-131"></path>
+  </g>
+  <!-- ESP32&#45;&gt;Server Backend -->
+  <g id="edge2" class="edge">
+  <title>ESP32-&gt;Server Backend</title>
+  <path fill="none" stroke="#000000" d="M269.2007,-271.2095C225.4301,-266.8061 148.0153,-257.7394 139.737,-248 121.8441,-226.9492 137.0496,-196.2121 152.6955,-174.3805"></path>
+  <polygon fill="#000000" stroke="#000000" points="155.6393,-176.2901 158.8731,-166.2008 150.0534,-172.0714 155.6393,-176.2901"></polygon>
+  <text text-anchor="start" x="139" y="-239" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">ESP sends info to server &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="139" y="-227" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">after processing raw inputs. &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="139" y="-215" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">e.g. selection/game actions. &nbsp;&nbsp;</text>
+  </g>
+  <!-- LCD -->
+  <g id="node10" class="node">
+  <title>LCD</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="541,-166 485,-166 485,-130 541,-130 541,-166"></polygon>
+  <text text-anchor="start" x="501.0018" y="-144.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">LCD</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M497.3333,-131C497.3333,-131 528.6667,-131 528.6667,-131 534.3333,-131 540,-136.6667 540,-142.3333 540,-142.3333 540,-153.6667 540,-153.6667 540,-159.3333 534.3333,-165 528.6667,-165 528.6667,-165 497.3333,-165 497.3333,-165 491.6667,-165 486,-159.3333 486,-153.6667 486,-153.6667 486,-142.3333 486,-142.3333 486,-136.6667 491.6667,-131 497.3333,-131"></path>
+  </g>
+  <!-- ESP32&#45;&gt;LCD -->
+  <g id="edge3" class="edge">
+  <title>ESP32-&gt;LCD</title>
+  <path fill="none" stroke="#000000" d="M328.616,-271.5629C377.6579,-267.2719 471.4995,-257.8821 483,-248 503.5314,-230.3578 510.3175,-199.2658 512.4083,-176.4214"></path>
+  <polygon fill="#000000" stroke="#000000" points="515.9117,-176.485 513.0843,-166.2745 508.9272,-176.0196 515.9117,-176.485"></polygon>
+  <text text-anchor="start" x="505" y="-239" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">Avatars, text, games and &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="505" y="-227" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">user interface are displayed &nbsp;&nbsp;&nbsp;</text>
+  <text text-anchor="start" x="505" y="-215" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">on the LCD. &nbsp;&nbsp;</text>
+  </g>
+  <!-- Physical Inputs -->
+  <!-- Physical Inputs&#45;&gt;ESP32 -->
+  <g id="edge1" class="edge">
+  <title>Physical Inputs-&gt;ESP32</title>
+  <path fill="none" stroke="#000000" d="M299,-344.0002C299,-331.1134 299,-315.527 299,-302.3361"></path>
+  <polygon fill="#000000" stroke="#000000" points="302.5001,-302.0005 299,-292.0005 295.5001,-302.0006 302.5001,-302.0005"></polygon>
+  <text text-anchor="start" x="299" y="-327" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">Inputs send analog (Joystick/IMU) and &nbsp;&nbsp;&nbsp;</text>
+  <text text-anchor="start" x="299" y="-315" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">digital (buttons) data electrically corresponding to actions &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="299" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">e.g. moving a character, steering a car, selecting an option &nbsp;&nbsp;</text>
+  </g>
+  <!-- Joystick -->
+  <g id="node3" class="node">
+  <title>Joystick</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="277,-388 213,-388 213,-352 277,-352 277,-388"></polygon>
+  <text text-anchor="start" x="223.6658" y="-366.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Joystick</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M225.3333,-353C225.3333,-353 264.6667,-353 264.6667,-353 270.3333,-353 276,-358.6667 276,-364.3333 276,-364.3333 276,-375.6667 276,-375.6667 276,-381.3333 270.3333,-387 264.6667,-387 264.6667,-387 225.3333,-387 225.3333,-387 219.6667,-387 214,-381.3333 214,-375.6667 214,-375.6667 214,-364.3333 214,-364.3333 214,-358.6667 219.6667,-353 225.3333,-353"></path>
+  </g>
+  <!-- IMU -->
+  <g id="node4" class="node">
+  <title>IMU</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="191,-388 135,-388 135,-352 191,-352 191,-388"></polygon>
+  <text text-anchor="start" x="152.0038" y="-366.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">IMU</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M147.3333,-353C147.3333,-353 178.6667,-353 178.6667,-353 184.3333,-353 190,-358.6667 190,-364.3333 190,-364.3333 190,-375.6667 190,-375.6667 190,-381.3333 184.3333,-387 178.6667,-387 178.6667,-387 147.3333,-387 147.3333,-387 141.6667,-387 136,-381.3333 136,-375.6667 136,-375.6667 136,-364.3333 136,-364.3333 136,-358.6667 141.6667,-353 147.3333,-353"></path>
+  </g>
+  <!-- Buttons -->
+  <g id="node5" class="node">
+  <title>Buttons</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="113,-388 51,-388 51,-352 113,-352 113,-388"></polygon>
+  <text text-anchor="start" x="61.6576" y="-366.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Buttons</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M63.3333,-353C63.3333,-353 100.6667,-353 100.6667,-353 106.3333,-353 112,-358.6667 112,-364.3333 112,-364.3333 112,-375.6667 112,-375.6667 112,-381.3333 106.3333,-387 100.6667,-387 100.6667,-387 63.3333,-387 63.3333,-387 57.6667,-387 52,-381.3333 52,-375.6667 52,-375.6667 52,-364.3333 52,-364.3333 52,-358.6667 57.6667,-353 63.3333,-353"></path>
+  </g>
+  <!-- Online -->
+  <!-- Server Backend&#45;&gt;ESP32 -->
+  <g id="edge4" class="edge">
+  <title>Server Backend-&gt;ESP32</title>
+  <path fill="none" stroke="#000000" d="M213.4308,-166.0591C233.3734,-177.0211 256.8701,-192.6416 273,-212 281.2638,-221.9178 287.2401,-234.8386 291.363,-246.3163"></path>
+  <polygon fill="#000000" stroke="#000000" points="288.072,-247.5128 294.52,-255.9196 294.7219,-245.3267 288.072,-247.5128"></polygon>
+  <text text-anchor="start" x="291" y="-239" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">Server sends info back to ESP32. &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="291" y="-227" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">e.g. Saved avatar data, avatar positions, &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="291" y="-215" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">OK on authentication. &nbsp;&nbsp;</text>
+  </g>
+  <!-- Web App -->
+  <g id="node8" class="node">
+  <title>Web App</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="184.5,-52 113.5,-52 113.5,-16 184.5,-16 184.5,-52"></polygon>
+  <text text-anchor="start" x="124.8262" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Web App</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M125.8333,-17C125.8333,-17 172.1667,-17 172.1667,-17 177.8333,-17 183.5,-22.6667 183.5,-28.3333 183.5,-28.3333 183.5,-39.6667 183.5,-39.6667 183.5,-45.3333 177.8333,-51 172.1667,-51 172.1667,-51 125.8333,-51 125.8333,-51 120.1667,-51 114.5,-45.3333 114.5,-39.6667 114.5,-39.6667 114.5,-28.3333 114.5,-28.3333 114.5,-22.6667 120.1667,-17 125.8333,-17"></path>
+  </g>
+  <!-- Server Backend&#45;&gt;Web App -->
+  <g id="edge6" class="edge">
+  <title>Server Backend-&gt;Web App</title>
+  <path fill="none" stroke="#000000" d="M200.416,-129.6803C207.8396,-122.86 215.0217,-114.4505 219,-105 225.2078,-90.2534 227.4117,-82.6104 219,-69 213.1481,-59.5315 203.8732,-52.5388 193.9653,-47.407"></path>
+  <polygon fill="#000000" stroke="#000000" points="195.318,-44.177 184.7683,-43.1996 192.4059,-50.5425 195.318,-44.177"></polygon>
+  <text text-anchor="start" x="224" y="-96" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">The server sends a session ID &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="224" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">and avatar customization information &nbsp;&nbsp;&nbsp;</text>
+  <text text-anchor="start" x="224" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">back to the webapp for customization. &nbsp;&nbsp;</text>
+  </g>
+  <!-- Web App&#45;&gt;Server Backend -->
+  <g id="edge5" class="edge">
+  <title>Web App-&gt;Server Backend</title>
+  <path fill="none" stroke="#000000" d="M113.4793,-42.6497C89.7604,-49.2266 61.6655,-58.8491 54.603,-69 45.4651,-82.1339 45.3863,-91.9213 54.603,-105 61.8871,-115.3363 86.5385,-124.99 111.654,-132.521"></path>
+  <polygon fill="#000000" stroke="#000000" points="110.6885,-135.8852 121.2672,-135.3004 112.6328,-129.1606 110.6885,-135.8852"></polygon>
+  <text text-anchor="start" x="55" y="-96" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">The web app sends authentication &nbsp;&nbsp;&nbsp;</text>
+  <text text-anchor="start" x="55" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">and avatar data to the backend &nbsp;&nbsp;&nbsp;</text>
+  <text text-anchor="start" x="55" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">so that they can be saved. &nbsp;&nbsp;</text>
+  </g>
+  <!-- Outputs -->
+  </g>
+  </svg>
+System State Machine
+-------------------------------------------------------------------------------
+<svg width="800pt" height="276pt" viewBox="0.00 0.00 1141.00 372.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 368)">
+  <title>state transitions</title>
+  <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-368 1137,-368 1137,4 -4,4"></polygon>
+  <g id="clust1" class="cluster">
+  <title>cluster_Webapp</title>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M20,-180C20,-180 291,-180 291,-180 297,-180 303,-186 303,-192 303,-192 303,-344 303,-344 303,-350 297,-356 291,-356 291,-356 20,-356 20,-356 14,-356 8,-350 8,-344 8,-344 8,-192 8,-192 8,-186 14,-180 20,-180"></path>
+  <text text-anchor="start" x="133.1596" y="-337.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Webapp</text>
+  </g>
+  <g id="clust2" class="cluster">
+  <title>cluster_ESP</title>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M323,-8C323,-8 1113,-8 1113,-8 1119,-8 1125,-14 1125,-20 1125,-20 1125,-344 1125,-344 1125,-350 1119,-356 1113,-356 1113,-356 323,-356 323,-356 317,-356 311,-350 311,-344 311,-344 311,-20 311,-20 311,-14 317,-8 323,-8"></path>
+  <text text-anchor="start" x="705.9958" y="-337.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">ESP</text>
+  </g>
+  <!-- Webapp -->
+  <!-- Log In/Sign Up -->
+  <g id="node2" class="node">
+  <title>Log In/Sign Up</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="117.5,-318 16.5,-318 16.5,-282 117.5,-282 117.5,-318"></polygon>
+  <text text-anchor="start" x="27.8184" y="-296.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Log In/Sign Up</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M28.8333,-283C28.8333,-283 105.1667,-283 105.1667,-283 110.8333,-283 116.5,-288.6667 116.5,-294.3333 116.5,-294.3333 116.5,-305.6667 116.5,-305.6667 116.5,-311.3333 110.8333,-317 105.1667,-317 105.1667,-317 28.8333,-317 28.8333,-317 23.1667,-317 17.5,-311.3333 17.5,-305.6667 17.5,-305.6667 17.5,-294.3333 17.5,-294.3333 17.5,-288.6667 23.1667,-283 28.8333,-283"></path>
+  </g>
+  <!-- Log In/Sign Up&#45;&gt;Log In/Sign Up -->
+  <g id="edge1" class="edge">
+  <title>Log In/Sign Up-&gt;Log In/Sign Up</title>
+  <path fill="none" stroke="#000000" d="M117.8173,-304.7988C130.2487,-304.4434 139.5,-302.8438 139.5,-300 139.5,-298.0005 134.9263,-296.6161 127.8893,-295.8467"></path>
+  <polygon fill="#000000" stroke="#000000" points="128.0207,-292.348 117.8173,-295.2012 127.5729,-299.3337 128.0207,-292.348"></polygon>
+  <text text-anchor="start" x="139.5" y="-297" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">Log In/Sign Up unsuccessful. &nbsp;&nbsp;</text>
+  </g>
+  <!-- Create/Edit Avatar -->
+  <g id="node3" class="node">
+  <title>Create/Edit Avatar</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="136,-224 16,-224 16,-188 136,-188 136,-224"></polygon>
+  <text text-anchor="start" x="26.9902" y="-202.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Create/Edit Avatar</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M28.3333,-189C28.3333,-189 123.6667,-189 123.6667,-189 129.3333,-189 135,-194.6667 135,-200.3333 135,-200.3333 135,-211.6667 135,-211.6667 135,-217.3333 129.3333,-223 123.6667,-223 123.6667,-223 28.3333,-223 28.3333,-223 22.6667,-223 17,-217.3333 17,-211.6667 17,-211.6667 17,-200.3333 17,-200.3333 17,-194.6667 22.6667,-189 28.3333,-189"></path>
+  </g>
+  <!-- Log In/Sign Up&#45;&gt;Create/Edit Avatar -->
+  <g id="edge2" class="edge">
+  <title>Log In/Sign Up-&gt;Create/Edit Avatar</title>
+  <path fill="none" stroke="#000000" d="M68.7353,-281.8759C70.0302,-268.3516 71.8237,-249.6192 73.3047,-234.1514"></path>
+  <polygon fill="#000000" stroke="#000000" points="76.8009,-234.3566 74.27,-224.0685 69.8328,-233.6894 76.8009,-234.3566"></polygon>
+  <text text-anchor="start" x="72" y="-256" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">Log In/Sign Up &nbsp;&nbsp;</text>
+  <text text-anchor="start" x="72" y="-244" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">successful. &nbsp;&nbsp;</text>
+  </g>
+  <!-- ESP -->
+  <!-- ESP Login Screen -->
+  <g id="node5" class="node">
+  <title>ESP Login Screen</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="811,-318 691,-318 691,-282 811,-282 811,-318"></polygon>
+  <text text-anchor="start" x="701.983" y="-296.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">ESP Login Screen</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M703.3333,-283C703.3333,-283 798.6667,-283 798.6667,-283 804.3333,-283 810,-288.6667 810,-294.3333 810,-294.3333 810,-305.6667 810,-305.6667 810,-311.3333 804.3333,-317 798.6667,-317 798.6667,-317 703.3333,-317 703.3333,-317 697.6667,-317 692,-311.3333 692,-305.6667 692,-305.6667 692,-294.3333 692,-294.3333 692,-288.6667 697.6667,-283 703.3333,-283"></path>
+  </g>
+  <!-- Home -->
+  <g id="node6" class="node">
+  <title>Home</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="779,-224 723,-224 723,-188 779,-188 779,-224"></polygon>
+  <text text-anchor="start" x="735.0004" y="-202.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Home</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M735.3333,-189C735.3333,-189 766.6667,-189 766.6667,-189 772.3333,-189 778,-194.6667 778,-200.3333 778,-200.3333 778,-211.6667 778,-211.6667 778,-217.3333 772.3333,-223 766.6667,-223 766.6667,-223 735.3333,-223 735.3333,-223 729.6667,-223 724,-217.3333 724,-211.6667 724,-211.6667 724,-200.3333 724,-200.3333 724,-194.6667 729.6667,-189 735.3333,-189"></path>
+  </g>
+  <!-- ESP Login Screen&#45;&gt;Home -->
+  <g id="edge3" class="edge">
+  <title>ESP Login Screen-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M751,-281.8759C751,-268.3516 751,-249.6192 751,-234.1514"></path>
+  <polygon fill="#000000" stroke="#000000" points="754.5001,-234.0685 751,-224.0685 747.5001,-234.0685 754.5001,-234.0685"></polygon>
+  <text text-anchor="middle" x="752.3895" y="-250" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Social -->
+  <g id="node7" class="node">
+  <title>Social</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="524,-134 468,-134 468,-98 524,-98 524,-134"></polygon>
+  <text text-anchor="start" x="479.665" y="-112.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Social</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M480.3333,-99C480.3333,-99 511.6667,-99 511.6667,-99 517.3333,-99 523,-104.6667 523,-110.3333 523,-110.3333 523,-121.6667 523,-121.6667 523,-127.3333 517.3333,-133 511.6667,-133 511.6667,-133 480.3333,-133 480.3333,-133 474.6667,-133 469,-127.3333 469,-121.6667 469,-121.6667 469,-110.3333 469,-110.3333 469,-104.6667 474.6667,-99 480.3333,-99"></path>
+  </g>
+  <!-- Home&#45;&gt;Social -->
+  <g id="edge4" class="edge">
+  <title>Home-&gt;Social</title>
+  <path fill="none" stroke="#000000" d="M722.7437,-202.5804C677.8949,-196.8623 592.6588,-184.7279 565,-172 548.7894,-164.5403 533.1419,-152.3898 520.8577,-141.31"></path>
+  <polygon fill="#000000" stroke="#000000" points="522.9941,-138.516 513.2988,-134.2437 518.2137,-143.6296 522.9941,-138.516"></polygon>
+  <text text-anchor="middle" x="549.3895" y="-154" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Friends -->
+  <g id="node8" class="node">
+  <title>Friends</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="707,-134 645,-134 645,-98 707,-98 707,-134"></polygon>
+  <text text-anchor="start" x="655.9996" y="-112.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Friends</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M657.3333,-99C657.3333,-99 694.6667,-99 694.6667,-99 700.3333,-99 706,-104.6667 706,-110.3333 706,-110.3333 706,-121.6667 706,-121.6667 706,-127.3333 700.3333,-133 694.6667,-133 694.6667,-133 657.3333,-133 657.3333,-133 651.6667,-133 646,-127.3333 646,-121.6667 646,-121.6667 646,-110.3333 646,-110.3333 646,-104.6667 651.6667,-99 657.3333,-99"></path>
+  </g>
+  <!-- Home&#45;&gt;Friends -->
+  <g id="edge9" class="edge">
+  <title>Home-&gt;Friends</title>
+  <path fill="none" stroke="#000000" d="M735.8226,-187.7872C724.8436,-174.6123 709.8509,-156.6211 697.6216,-141.9459"></path>
+  <polygon fill="#000000" stroke="#000000" points="700.2455,-139.6273 691.1548,-134.1858 694.8679,-144.1087 700.2455,-139.6273"></polygon>
+  <text text-anchor="middle" x="715.3895" y="-154" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Room -->
+  <g id="node9" class="node">
+  <title>Room</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="918,-134 862,-134 862,-98 918,-98 918,-134"></polygon>
+  <text text-anchor="start" x="874.0004" y="-112.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Room</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M874.3333,-99C874.3333,-99 905.6667,-99 905.6667,-99 911.3333,-99 917,-104.6667 917,-110.3333 917,-110.3333 917,-121.6667 917,-121.6667 917,-127.3333 911.3333,-133 905.6667,-133 905.6667,-133 874.3333,-133 874.3333,-133 868.6667,-133 863,-127.3333 863,-121.6667 863,-121.6667 863,-110.3333 863,-110.3333 863,-104.6667 868.6667,-99 874.3333,-99"></path>
+  </g>
+  <!-- Home&#45;&gt;Room -->
+  <g id="edge14" class="edge">
+  <title>Home-&gt;Room</title>
+  <path fill="none" stroke="#000000" d="M779.3199,-200.9204C800.137,-196.1199 828.2885,-187.3045 849,-172 859.4183,-164.3015 868.317,-153.1929 875.135,-142.896"></path>
+  <polygon fill="#000000" stroke="#000000" points="878.2591,-144.5005 880.5769,-134.1623 872.318,-140.7986 878.2591,-144.5005"></polygon>
+  <text text-anchor="middle" x="869.3895" y="-154" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Send Message -->
+  <g id="node10" class="node">
+  <title>Send Message</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="421,-52 319,-52 319,-16 421,-16 421,-52"></polygon>
+  <text text-anchor="start" x="329.986" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Send Message</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M331.3333,-17C331.3333,-17 408.6667,-17 408.6667,-17 414.3333,-17 420,-22.6667 420,-28.3333 420,-28.3333 420,-39.6667 420,-39.6667 420,-45.3333 414.3333,-51 408.6667,-51 408.6667,-51 331.3333,-51 331.3333,-51 325.6667,-51 320,-45.3333 320,-39.6667 320,-39.6667 320,-28.3333 320,-28.3333 320,-22.6667 325.6667,-17 331.3333,-17"></path>
+  </g>
+  <!-- Social&#45;&gt;Send Message -->
+  <g id="edge5" class="edge">
+  <title>Social-&gt;Send Message</title>
+  <path fill="none" stroke="#000000" d="M468.0365,-97.8015C449.8478,-85.9644 425.946,-70.4093 406.2968,-57.6217"></path>
+  <polygon fill="#000000" stroke="#000000" points="408.1758,-54.6687 397.8853,-52.1476 404.3576,-60.5357 408.1758,-54.6687"></polygon>
+  <text text-anchor="middle" x="442.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- View Messages -->
+  <g id="node11" class="node">
+  <title>View Messages</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="549,-52 443,-52 443,-16 549,-16 549,-52"></polygon>
+  <text text-anchor="start" x="453.994" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">View Messages</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M455.3333,-17C455.3333,-17 536.6667,-17 536.6667,-17 542.3333,-17 548,-22.6667 548,-28.3333 548,-28.3333 548,-39.6667 548,-39.6667 548,-45.3333 542.3333,-51 536.6667,-51 536.6667,-51 455.3333,-51 455.3333,-51 449.6667,-51 444,-45.3333 444,-39.6667 444,-39.6667 444,-28.3333 444,-28.3333 444,-22.6667 449.6667,-17 455.3333,-17"></path>
+  </g>
+  <!-- Social&#45;&gt;View Messages -->
+  <g id="edge6" class="edge">
+  <title>Social-&gt;View Messages</title>
+  <path fill="none" stroke="#000000" d="M496,-97.8015C496,-87.3976 496,-74.1215 496,-62.3768"></path>
+  <polygon fill="#000000" stroke="#000000" points="499.5001,-62.1476 496,-52.1476 492.5001,-62.1476 499.5001,-62.1476"></polygon>
+  <text text-anchor="middle" x="497.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- View Requests -->
+  <g id="node12" class="node">
+  <title>View Requests</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="793,-52 691,-52 691,-16 793,-16 793,-52"></polygon>
+  <text text-anchor="start" x="701.9926" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">View Requests</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M703.3333,-17C703.3333,-17 780.6667,-17 780.6667,-17 786.3333,-17 792,-22.6667 792,-28.3333 792,-28.3333 792,-39.6667 792,-39.6667 792,-45.3333 786.3333,-51 780.6667,-51 780.6667,-51 703.3333,-51 703.3333,-51 697.6667,-51 692,-45.3333 692,-39.6667 692,-39.6667 692,-28.3333 692,-28.3333 692,-22.6667 697.6667,-17 703.3333,-17"></path>
+  </g>
+  <!-- Friends&#45;&gt;View Requests -->
+  <g id="edge11" class="edge">
+  <title>Friends-&gt;View Requests</title>
+  <path fill="none" stroke="#000000" d="M690.6475,-97.8015C699.5341,-86.7606 711.0242,-72.4851 720.8818,-60.2378"></path>
+  <polygon fill="#000000" stroke="#000000" points="723.8498,-62.1323 727.3934,-52.1476 718.3967,-57.7432 723.8498,-62.1323"></polygon>
+  <text text-anchor="middle" x="714.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Send Request -->
+  <g id="node13" class="node">
+  <title>Send Request</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="669,-52 571,-52 571,-16 669,-16 669,-52"></polygon>
+  <text text-anchor="start" x="581.9846" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Send Request</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M583.3333,-17C583.3333,-17 656.6667,-17 656.6667,-17 662.3333,-17 668,-22.6667 668,-28.3333 668,-28.3333 668,-39.6667 668,-39.6667 668,-45.3333 662.3333,-51 656.6667,-51 656.6667,-51 583.3333,-51 583.3333,-51 577.6667,-51 572,-45.3333 572,-39.6667 572,-39.6667 572,-28.3333 572,-28.3333 572,-22.6667 577.6667,-17 583.3333,-17"></path>
+  </g>
+  <!-- Friends&#45;&gt;Send Request -->
+  <g id="edge10" class="edge">
+  <title>Friends-&gt;Send Request</title>
+  <path fill="none" stroke="#000000" d="M663.5718,-97.8015C656.1042,-86.8668 646.4698,-72.7593 638.1601,-60.5916"></path>
+  <polygon fill="#000000" stroke="#000000" points="640.9234,-58.4317 632.3935,-52.1476 635.1428,-62.3795 640.9234,-58.4317"></polygon>
+  <text text-anchor="middle" x="652.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Room&#45;&gt;Home -->
+  <g id="edge15" class="edge">
+  <title>Room-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M862.1448,-134.2066C845.3258,-145.1828 823.4526,-159.4273 804,-172 798.6978,-175.4269 793.0907,-179.0379 787.5861,-182.5756"></path>
+  <polygon fill="#000000" stroke="#000000" points="785.603,-179.6895 779.0789,-188.0374 789.3848,-185.58 785.603,-179.6895"></polygon>
+  <text text-anchor="middle" x="836.3895" y="-154" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Join Room -->
+  <g id="node14" class="node">
+  <title>Join Room</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="894.5,-52 815.5,-52 815.5,-16 894.5,-16 894.5,-52"></polygon>
+  <text text-anchor="start" x="826.8308" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Join Room</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M827.8333,-17C827.8333,-17 882.1667,-17 882.1667,-17 887.8333,-17 893.5,-22.6667 893.5,-28.3333 893.5,-28.3333 893.5,-39.6667 893.5,-39.6667 893.5,-45.3333 887.8333,-51 882.1667,-51 882.1667,-51 827.8333,-51 827.8333,-51 822.1667,-51 816.5,-45.3333 816.5,-39.6667 816.5,-39.6667 816.5,-28.3333 816.5,-28.3333 816.5,-22.6667 822.1667,-17 827.8333,-17"></path>
+  </g>
+  <!-- Room&#45;&gt;Join Room -->
+  <g id="edge16" class="edge">
+  <title>Room-&gt;Join Room</title>
+  <path fill="none" stroke="#000000" d="M875.8428,-97.8424C872.2919,-92.6264 868.7715,-86.78 866.221,-81 863.6609,-75.1981 861.6343,-68.7246 860.0494,-62.4818"></path>
+  <polygon fill="#000000" stroke="#000000" points="863.3821,-61.3474 857.7828,-52.3531 856.5511,-62.8761 863.3821,-61.3474"></polygon>
+  <text text-anchor="middle" x="867.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Invite Friend -->
+  <g id="node15" class="node">
+  <title>Invite Friend</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="1117,-52 1029,-52 1029,-16 1117,-16 1117,-52"></polygon>
+  <text text-anchor="start" x="1039.9952" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Invite Friend</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M1041.3333,-17C1041.3333,-17 1104.6667,-17 1104.6667,-17 1110.3333,-17 1116,-22.6667 1116,-28.3333 1116,-28.3333 1116,-39.6667 1116,-39.6667 1116,-45.3333 1110.3333,-51 1104.6667,-51 1104.6667,-51 1041.3333,-51 1041.3333,-51 1035.6667,-51 1030,-45.3333 1030,-39.6667 1030,-39.6667 1030,-28.3333 1030,-28.3333 1030,-22.6667 1035.6667,-17 1041.3333,-17"></path>
+  </g>
+  <!-- Room&#45;&gt;Invite Friend -->
+  <g id="edge17" class="edge">
+  <title>Room-&gt;Invite Friend</title>
+  <path fill="none" stroke="#000000" d="M918.1927,-103.3672C946.144,-90.8426 989.5548,-71.3908 1023.302,-56.269"></path>
+  <polygon fill="#000000" stroke="#000000" points="1024.8488,-59.4113 1032.5433,-52.1281 1021.9864,-53.0233 1024.8488,-59.4113"></polygon>
+  <text text-anchor="middle" x="994.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Leave Room -->
+  <g id="node16" class="node">
+  <title>Leave Room</title>
+  <polygon fill="transparent" stroke="transparent" stroke-width="2" points="1007,-52 917,-52 917,-16 1007,-16 1007,-52"></polygon>
+  <text text-anchor="start" x="927.9914" y="-30.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">Leave Room</text>
+  <path fill="none" stroke="#000000" stroke-width="2" d="M929.3333,-17C929.3333,-17 994.6667,-17 994.6667,-17 1000.3333,-17 1006,-22.6667 1006,-28.3333 1006,-28.3333 1006,-39.6667 1006,-39.6667 1006,-45.3333 1000.3333,-51 994.6667,-51 994.6667,-51 929.3333,-51 929.3333,-51 923.6667,-51 918,-45.3333 918,-39.6667 918,-39.6667 918,-28.3333 918,-28.3333 918,-22.6667 923.6667,-17 929.3333,-17"></path>
+  </g>
+  <!-- Room&#45;&gt;Leave Room -->
+  <g id="edge18" class="edge">
+  <title>Room-&gt;Leave Room</title>
+  <path fill="none" stroke="#000000" d="M896.5213,-97.8079C900.4264,-88.5374 906.037,-77.4663 913.221,-69 916.3842,-65.2722 920.0259,-61.7354 923.8645,-58.4448"></path>
+  <polygon fill="#000000" stroke="#000000" points="926.266,-61.0075 931.9301,-52.0538 921.9186,-55.5211 926.266,-61.0075"></polygon>
+  <text text-anchor="middle" x="914.3895" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Send Message&#45;&gt;Home -->
+  <g id="edge7" class="edge">
+  <title>Send Message-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M375.1118,-52.2211C376.6797,-59.2768 378,-67.4576 378,-75 378,-157 378,-157 378,-157 378,-190.5227 617.8957,-201.7916 712.91,-204.9402"></path>
+  <polygon fill="#000000" stroke="#000000" points="712.8579,-208.4402 722.9644,-205.2608 713.081,-201.4438 712.8579,-208.4402"></polygon>
+  <text text-anchor="middle" x="379.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- View Messages&#45;&gt;Home -->
+  <g id="edge8" class="edge">
+  <title>View Messages-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M549.3069,-46.3117C561.5231,-52.412 571,-61.4961 571,-75 571,-157 571,-157 571,-157 571,-186.1485 659.9893,-198.5318 712.8266,-203.3153"></path>
+  <polygon fill="#000000" stroke="#000000" points="712.6134,-206.8098 722.875,-204.1734 713.2091,-199.8352 712.6134,-206.8098"></polygon>
+  <text text-anchor="middle" x="572.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- View Requests&#45;&gt;Home -->
+  <g id="edge13" class="edge">
+  <title>View Requests-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M747.7508,-52.1823C749.5146,-59.2333 751,-67.421 751,-75 751,-157 751,-157 751,-157 751,-163.6992 751,-170.9136 751,-177.6923"></path>
+  <polygon fill="#000000" stroke="#000000" points="747.5001,-177.8493 751,-187.8493 754.5001,-177.8493 747.5001,-177.8493"></polygon>
+  <text text-anchor="middle" x="752.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Send Request&#45;&gt;Home -->
+  <g id="edge12" class="edge">
+  <title>Send Request-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M620,-52.3688C620,-59.4426 620,-67.5972 620,-75 620,-157 620,-157 620,-157 620,-177.0054 674.272,-191.5579 712.9513,-199.389"></path>
+  <polygon fill="#000000" stroke="#000000" points="712.4125,-202.8498 722.8972,-201.3265 713.751,-195.9789 712.4125,-202.8498"></polygon>
+  <text text-anchor="middle" x="621.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Join Room&#45;&gt;Home -->
+  <g id="edge19" class="edge">
+  <title>Join Room-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M815.4116,-48.7101C805.6851,-54.9699 798,-63.5415 798,-75 798,-157 798,-157 798,-157 798,-166.6088 793.2346,-175.0665 786.7386,-182.1319"></path>
+  <polygon fill="#000000" stroke="#000000" points="784.0567,-179.8485 779.1541,-189.2408 788.8438,-184.9558 784.0567,-179.8485"></polygon>
+  <text text-anchor="middle" x="799.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Invite Friend&#45;&gt;Home -->
+  <g id="edge20" class="edge">
+  <title>Invite Friend-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M1055.5134,-52.1358C1050.8102,-58.7956 1047,-66.7399 1047,-75 1047,-157 1047,-157 1047,-157 1047,-182.8286 869.314,-198.0482 789.2786,-203.5936"></path>
+  <polygon fill="#000000" stroke="#000000" points="788.8544,-200.1142 779.1138,-204.2821 789.3275,-207.0982 788.8544,-200.1142"></polygon>
+  <text text-anchor="middle" x="1048.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  <!-- Leave Room&#45;&gt;Home -->
+  <g id="edge21" class="edge">
+  <title>Leave Room-&gt;Home</title>
+  <path fill="none" stroke="#000000" d="M966.4728,-52.2555C967.8447,-59.3154 969,-67.4901 969,-75 969,-157 969,-157 969,-157 969,-175.1975 851.8753,-193.0442 789.3276,-201.2773"></path>
+  <polygon fill="#000000" stroke="#000000" points="788.521,-197.8525 779.0534,-202.6079 789.4201,-204.7945 788.521,-197.8525"></polygon>
+  <text text-anchor="middle" x="970.3895" y="-113" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+  </g>
+  </g>
+  </svg>
+
+Parts List
+===============================================================================
+
+From 6.08 Curriculum
+
+  - TFT LCD Screen
+
+  - ESP32 Dev Kit
+
+  - Breadboard
+
+  - ESP32 IMU sensor
+
+  - Buttons (4)
+
+Purchased
+
+  - Vetco Electronics Joystick Module
+
+Discussion
+===============================================================================
+
+Design/Technical Challenges and Decisions
+-------------------------------------------------------------------------------
+1. When implementing this product, we had to take latency into account due to the large amount of HTTP requests that were being made to continually update the various avatars on the screen. To handle this, we implemented a dual core approach, where one core of the ESP was purely dedicated to performing all of the HTTP requests as fast as possible, while the other core performed all other operations. This allowed us to create a system with low latency to the server, along with a user interface that was as smooth as possible because no functions were blocked by GET or POST requests.
+
+The code to set up and run the second core which performs the server requests:
+~~~~~
+TaskHandle_t networkCoreTask;
+
+void setupNetworkCore() {
+  xTaskCreatePinnedToCore(
+      networkCoreLoop, /* Function to implement the task */
+      "networkCoreTask", /* Name of the task */
+      10000,  /* Stack size in words */
+      NULL,  /* Task input parameter */
+      0,  /* Priority of the task */
+      &networkCoreTask,  /* Task handle. */
+      0); /* Core where the task should run */
+}
+
+void networkCoreLoop(void * parameter) {
+  while(true) {
+    //Don't start updating until the sessionId has been properly set.
+    if (sessionId != 0) {
+      serverData.update(sessionId, room_owner, &validID, avatar);
+    }
+  }
+}
+~~~~~
+
+2. Due to the multiplayer oriented nature of the product, we had to account for various game breaking possibilities. These included adding friends when they were offline, inviting offline friends to join a room, sending messages to offline players, or losing internet connection while in a room, writing a message, or hosting a room. To handle these issues, our server side implementation was built with failsafes for as many possibilities as we could think of. When a user is disconnected, any operation that they were performing is scrapped and not sent to the server, and if a message or request is sent to an offline user, the request is stored in the targeted user's data within the database so that when they log on or reconnect, the message is waiting for them. This allows players to disconnect and reconnect without worrying that messages and requests that are sent to them will be lost.
+
+3. To create a user interface that wouldn't depend on the use of a huge amount of physical buttons, we had to implement an Icon class that could be used by our overall UI to print icons to the screen that could act as buttons whem the user clicks on them with the cursor. This addition vastly increased the flexibility of our state machine without adding unnecessary complications to the physical modules that we were using, as we could now add an infinite number of icons to take a user wherever they would like to go in the state machine. 
+
+4. During the development process, we found that the TFT screen and the TFT library did have some limits when it came to drawing shapes and strings outside of the bounds of the screen. These (literal) edge cases meant that whenever we moved an avatar so that some element was outside of the screen, we would have to stop printing the element or we would find some odd behavior, such as things printing on the other side of the screen and not erasing. We had to perform this for all movable elements that were printed to the screen, to prevent unwanted behavior.
+
+An example of this approach for the Usernames that are printed above avatars:
+~~~~~~~
+if(erase){
+  local_tft->fillRect(textX, textY, textLength*6, 8, color);
+}
+else if (textX >= 0 && textX + textLength*6 < local_tft->width()) { 
+    local_tft->drawString(username, textX, textY,1); //only prints if within the screen
+}
+~~~~~~~
+
+Logistical FAQs
+===============================================================================
+1. What if a player does not have any friends?
+
+    *Answer:* They will not be able to invite anyone to their breakout room and will not be able to text anyone. They will be told that they do not have any friends on their screen. 
+
+2. What if a player tries to send a friend request to someone who is already their friend?
+
+    *Answer:* They will be unable to do this and a message will appear on their screen saying "You have already sent a friend request to {other player's name}".
+
+3. What if a player logs out when they are in a breakout room?
+
+    *Answer:* Their avatar will disappear from the breakout room on everyone's screens. 
+
+4. What if a player tries to send a friend request to a user that doesn't exist?
+
+    *Answer:* They will be unable to do this and a message will appear on their screen saying "{player's friend} does not exist in the database!".
+
+
+
+Web App File Descriptions
+===============================================================================
+
+loginpage.html / login-signup.js
+-------------------------------------------------------------------------------
+These are the files that handle users either trying to sign in to existing accounts or create new accounts. Loginpage.html has two forms: one to sign up and one to sign in. 
+
+Upon submission, the information from the login form is POSTed to the login.py file (or the data from the sign up form is POSTed to the signup.py file). AJAX is used to handle form submissions. When the corresponding py file returned data, the response is parsed to see if an error message is returned. If there was no error, meaning the user succesfully logged in or signed up, the session id and username are retrieved from the data that was returned. Those are both saved as localStorage items so that they can be transferred to avatar-page.html. If the response from the py file gives an error, the user remains on this page and is directed to attempt to log in / sign up again. 
+
+
+avatar-page.html / avatar.js
+-------------------------------------------------------------------------------
+After successfully logging in or signing up, users are directed to avatar-page.html. Here, they choose their avatar's traits by using dropdown menus. The avatar on screen  updates as the user changes the values in the dropdown menus. This functionality is controlled by the code in avatar.js. When the user hits the submit button on this page, I use AJAX and submit the avatar data (avatar traits and session ID) to the avatar_info.py file so it can be stored in a database. 
+
+Whenever the body of the page is loaded (meaning whenever the user has signed in and is directed to this page), a get request is sent to the avatar_info.py file with the session ID. The py file returns the avatar data associated with the user that corresponds to the given session id. If there is no data about this user, that means they have either just created an account, or they haven't saved data on the webapp before. If data about the avatar is returned, the response is parsed, and the dropdown menu is populated accordingly. The avatar characteristics are also updated to reflect the information in the database.
+
+Avatar-page.html also displays each user's username and session ID. The session ID is important, as this is the value the user will need to input when logging into the ESP. 
+
+When the user clicks the sign out button or if the session ID has expired, the localStorage items that store the session ID and username are deleted. A POST request is also made to the signout.py file so that the user is removed from the database of active users. 
+
+
+Database
+===============================================================================
+A singular database was used in this project named "user_data.db." It contains various tables including:
+    * user_auth_data: Table that holds authentication information for users
+    * friend_requests_table: Table that holds friend requests
+    * friend_table: Table that holds friends
+    * room_info_table: Table that holds information on a room basis
+    * user_current_room_table: Table that holds what a user's current room is
+    * room_invite_table: Table that holds invites to join rooms
+    * texting_table: Table that holds messages between users.
+This database is located within the server directory and is accessible from all files on the server.
+
+Python File Descriptions
+===============================================================================
+
+texting_finalproject.py
+-------------------------------------------------------------------------------
+This python file was used to manage the entire texting functionality. From this file, a table called texts_table is created in the user_data_db. This table has four columns: user, friend, message, and time. <nav></nav>
+
+In the case of a GET request, the program's purpose is to retrieve the most recent message sent to the player sending the request. The program obtains the session ID of the player who sent the request as well as the friend which they would like to
+check their messages from. The program then checks to make sure that the player's session ID is a valid session ID. If it is, it retrieves and returns the most recent message stored in texts_table sent from the player's friend to the player. <nav></nav>
+
+If the player's friend has not sent them any messages, the program returns the message "No new messages for {player} from {player's friend}" <nav></nav>
+
+In the case of a POST request, the program's purpose is to store the message from the player to the player's friend. The program obtains the player's session ID, the player's friend, and the message to be sent.
+The program then checks to to make sure that the player's session ID is a valid session ID and that the player's friend exists in the system. <nav></nav>
+
+If the player's friend does not exist, the message "{player's friend} does not exist in the database!" is returned. <nav></nav>
+
+If both the player and the player's friend are valid, the player, their friend, the message that was sent, and the time the message was sent, are inserted into the table. 
+The program then returns the message "Message has been sent from {player} to {player's friend}".
+
+friendrequest.py
+-------------------------------------------------------------------------------
+This python file was used to manage part of the friend request functionality. When called, it allows a player to view their friend requests or submit a new friend request. From this file, 
+a table called friend_requests_table is created in user_data_db. This table has two columns: sender and receiver. Another table is also created called friend_table in user_data_db. This table has two columns: user and friend. <nav></nav>
+
+In the case of a GET request, the program's purpose is to retrieve any friend requests a player has. The program obtains the session ID of the player who wants to view their friend requests. The program then checks to make sure that the player's session ID is a valid session ID. If it is, it retrieves
+all of the other players who have sent the player a friend request from the friend_requests_table. It stores all of the requests in a string separated by a comma. It then returns this string. <nav></nav>
+
+In the case of a POST request, the program's purpose is to store the friend request from the player to the player's friend. The program obtains the player's session ID and the other player's name. The program then checks to to make sure that the player's session ID is a valid session ID and that the player's friend exists in the system. <nav></nav>
+
+If the player's friend does not exist, the message "{player's friend} does not exist in the database!" is returned. <nav></nav>
+
+If both the player and the player's friend are valid, it then checks to see if the friend being requested is already a friend of the player. If the player sent a request to someone already in their friend list, the program returns the message "{other player's name} is already your friend". <nav></nav>
+
+The program also checks to see if the friend being requested has already been been requested by the player. If this is true, the program returns the message "You have already sent a friend request to {other player's name}". <nav></nav>
+
+If the player tries to friend themselves, the program returns a message telling them that they cannot friend themselves. <nav></nav>
+
+If none of these checks are true, the friend and the player they are sending the request to are inserted into the friend_requests_table table. The message "Friend request has been sent from {player's name} to {other player's name}" is then returned. 
+
+addfriend.py
+-------------------------------------------------------------------------------
+This python file is used to accept/decline friend requests and obtain a player's friend list. From this file, a table called friend_table is created in user_data_db with two columns: user and friend. <nav></nav>
+
+In the case of a GET request, the program's purpose is to retrieve the player's friends list. The program obtains the player's session ID. The program then checks to make sure that the player's session ID is a valid session ID. If it is, it retrieves
+all of the player's friends from the friend_table. It stores all of the friends in a string separated by a comma. It then returns this string. <nav></nav>
+
+In the case of a POST request, the program's purpose is to accept or deny a player's friend requests. The program obtains the player's session ID, the player whose friend request they want to answer, and their answer to the request ("yes" or "no"). The program then checks to to make sure that the player's session ID is a valid session ID and the answer they give is valid. <nav></nav>
+
+If the answer is not valid then the program returns the message "Invalid response! You can respond only with yes or no". <nav></nav>
+
+If both of these are valid, the program checks if the player accepting/denying a friend request to themselves. If this is the case, the message "You cannot friend yourself!" is returned. <nav></nav>
+
+The program then checks if the player accepting/denying a friend request is trying to accept/deny another player's requests. If this is the case, the message "You cannot accept/decline {other player's}'s request for them". <nav></nav>
+
+If none of these are true, then if the answer is "yes", the player and the person they are accepting the request from are added to friend_table and vice versa. If the answer is "no" then this does not occur. In both cases, the request from the player from the player they are responding to is deleted from friend_requests_table. 
+If they accepted the request, the message "You have accepted {other player's}'s friend request". If they denyed the request, the message "You have denied {other player's}'s friend request" is returned. 
+
+avatar_info.py
+-------------------------------------------------------------------------------
+This file creates a new table within an already existent database to be able to more easily get user. This table, "avatar_info_table," stores username, and other avatar parameters that include:
+   * head size: string
+   * color: int
+   * arm length: string
+   * torso length: string
+   * leg length: string
+The incoming data from the web app is stored in the table along with a timestamp to easily retrieve the latest information.
+The GET request functionality first checks for an appropriate session ID, and if it is the script will proceed, else return that the session ID is invalid or missing. The code checks to see if the GET is from the web app or ESP and best format it for each. If the GET request is from the web app, it returns a dictionary (json). For the color however, to return the color as a string, a function retrieves the appropriate key from the color library to make the value a string. If the GET request is from the ESP, it returns a comma separated string to make it easier to parse. To make implementation on the ESP easier, the head and body sizes are translated to pixel sizes through the functions: size_to_pixel_head/body().
+
+avatar_movement.py
+-------------------------------------------------------------------------------
+This file creates and manages a new table within the user_data.db database. This table, "movements_updates_table," stores username, head position information in the form of an X,Y position, and animation in the the following form:
+    * username: string
+    * head joint: string
+    * animation: string
+The incoming data from the ESP POST request is stored in the table along with a timestamp, which allows for only the latest parameters from a user to be fetched, improving time.
+The POST request will also return a message if an improper session ID is provided and/or if and what the missing parameters are.
+The POST response from the script will then be all the avatar info, both characteristics and positioning, for each avatar in the user's room in the following format:
+room_owner:user1,12,67875,23,23,32,54,67,WAVE,user2_info,...
+If the user is the singular player in a room, only their info is returned.
+
+The GET request functionality first checks for an appropriate session ID. A user is then retrieved from the session ID or an error warning is returned:
+   * If none is found, then "the user does not exist" is returned.
+   * If the user exists, the code proceeds to retrieve its information based on username, their current room, and grabs the latest entry in the table
+   * If no Session ID or username is included, the request is denied and returns "ERROR! The following values are incorrect or missing: +{missing values}" to the user.
+
+rooms.py
+-------------------------------------------------------------------------------
+This file creates a library of functions to implement a room system for the avatars to be able to interact through.
+The room system works by having 3 tables to keep track of every user and where they are. All these tables are within user_data.db:
+    * room_info_table: A table that stores room#, users in the room, timestamp, and joinability (whether the room can be joined or not). Made to keep track of what users are in a room and if a room can be joined or not
+    * user_current_room_table: A table that stores user, room# they are currently in, and timestamp. Made to easily retrieve a user's current room
+    * room_invite_table: A table that stores user inviter, user invited, status of invite, and timestamp. This table was made to have room invite functionality of the room system
+The functions that make up this library are:
+    * generate_room_id(): Function that generates a random room number for a user's home room
+    * create_rooms_table(c): # Function that will create a proxy table to keep track of the room a user is currently in and allow others to join room. Joinability is either a 0 (not joinable) or 1 (joinable)
+    * create_user_current_room_table(c): Function that creates a table mapping a user to their current room
+    * create_room_invite_table(c): Function that creates a table to keep track of friend room invites
+    * create_home_room(c, user, home_room): Function that initializes a users home room
+    * initialize_current_room(c, user, home_room): Function that initializes a user's current room
+    * join_room(c, user, room_number): Function that will allow one user to join another room by adding a user into a room in the rooms table. Updates joinability of user's home room to 0
+    * leave_room(c, user, room_number): Function that will remove a user from the room they are in unless they are in their home room already. Updates joinability of a user's home room to 1
+    * get_home_room_from_user(c, user): Function that will look in user_auth_data and return the home room that a user owns
+    * get_user_from_home_room(c, home_room_number): Function that will look in user_auth_table and return the user that owns a home room
+    * get_current_room_from_user(c, user): Function that will return the room a user is currently in or return None.
+    * set_user_room_joinability(c, user, home_room_number, joinability): Function that will update the joinability of a room
+    * is_room_joinable(c, room_number): Function that checks if a room is joinable. Return True if joinable, False if not
+    * get_users_from_room(c, room_number): Function that will return a list of users that are currently in a room
+    * kick_user_from_room(c, user, room_number): Function that will remove a user from a room and screen unless they are the host
+    * invite_user(c, user, host): Function that will allow a user to invite another user to their room
+    * get_invitations(c, user): Function that returns all available invitations for user. Deletes an invitation from the table if it is resolved and seen
+    * respond_to_invitation(c, response, inviter, invitee): Function that will allow a user to respond to an invitation and update room_invite_table
+    * get_invitation_status(c, inviter, invitee): Function that returns the response a friend provided for an invitation
+    * get_user_friends(c, user): Function that grabs the friend list for a specific user
+    * are_users_friends(c, user, friend): Function that returns if users are friends or not
+    * empty_out_room(c, host, home_room): Function that will fully clear out a room besides the host
+    * clean_up_inactive_users(c, user): Function that will properly update joinability of a friends user's room upon sign in and kick users from an inactive host's room
+
+room_management.py
+-------------------------------------------------------------------------------
+This file implements the room system that was integrated with the security functionality, movement tracking, and friends system. This file imports from the room library to take care of its actions which include:
+    * Leaving a room
+    * Inviting a user to a room
+    * Accepting an invitation to join a room
+    * Declining an invitation to join a room
+    * Kicking a user from a room
+Every user has an assigned home room that is generated up account creation. This homeroom cannot be left, though the joinability could be set to 0, indicating a user actively present in a different room, which is updated via this file.
+To perform actions within a room, a POST request is sent to room_management.py with session ID, friend's username, and action as form values. The following are the possible actions:
+    * Joining a room occurs when a user simply joins a friends room, which is done by inserting the name into the users column in room_info_table.
+    * Leaving a room removes a user from the users column in room_info_table
+    * Every join and leave action then appropriately sets the the joinability of the user's home room to 0 for joining, and 1 for leaving
+    * Kicking a user makes a user force leave a room, but only allows the host/owner of the room to do so
+    * Invite System:
+        * Inviting a user creates an invite for a user to join their room and inserts it in room_invite_table with a status of 'invited' unless there is already an active invitation
+        * Accepting an invite will cause a player to join the inviter's room if it is still joinable and update the respective status of the request in room_invite_table to 'accepted'
+        * Declining an invite will keep the player within the same room and update the respective status of the request to 'declined' in room_invite_table
+        * The requests of a user can be seen by sending a GET request to room_management.py with their session ID as a parameter.
+            * The requests shown are all requests in the database, but it deletes any set as 'accepted' or 'declined' once viewed
+All room actions can only be performed if the user is friends with the user they want to perform the action on. A check is in place for this and to prevent doing actions unto oneself.
+This file is responsible for properly keeping track of rooms which is a basis for proper information being sent back in avatar_movement.py
+
+signup.py
+-------------------------------------------------------------------------------
+This python file handles the signup functionality. It accepts a username and password in a POST request body. When these values are received, the script checks if that username already exists in the database.
+
+If that username is already in the database, the script responds with a json string with error code 401.
+
+Otherwise, the user's password is hashed, and the username and password hash are added to the user_auth_data table. 
+
+The script then responds with a json string containing a random session ID between 1 and 10^5 so that the user can log in on the ESP without having to input their entire username and password.
+
+The user's password is hashed so that an attacker who gains control of the database will not be able to read each user's password, thus compromising evey user's website on both our website and all other websites.
+
+login.py
+-------------------------------------------------------------------------------
+This python file handles the login functionality. First, it accepts a username and password as arguments. Then, it checks if the username exists in the database. If the username does not exist, return a json string with error code 401.
+
+If the username does exist, then login.py checks the input password against the password hash stored in the database. If the hashes match, a json string with a session ID is returned. 
+
+If 60 minutes have passed since the last request was sent by the user (which is stored as a timestamp in the database),login.py generates a new session ID and saves that ID at the latest timestamp.
+
+auth.py
+-------------------------------------------------------------------------------
+This python file contains most of the logic for handling authentication data. signup.py and login.py both import from auth.py, so it can be thought of as a library.
+
+Functions in auth.py include, but are not limited to:
+
+<ol>
+  <li> Creating the user_auth_data table </li>
+  <li> Generating session IDs  </li>
+  <li> Getting a username from a given session ID  </li>
+  <li> Adding new users to the database  </li>
+  <li> Checking if a user is online  </li>
+</ol>
+
+logout.py
+-------------------------------------------------------------------------------
+This script takes the session id of a user and logs them out. This is done by setting the session ID of a user to the oldest valid timestamp such that from then on, the session id is invalid.
+This also will cause a user to leave the room they are currently in, or clear out all the users from it if hosting. If the session ID has already expired, it will find where the inactive user was and clear out or leave the room depending on where they are to keep records updated.
+Log out occurs by logging out via the web app, which updates on the ESP in almost real time. Whenever a user logs in as well, all their friends are checked for inactivity and sent back to their home rooms and properly set to offline, or nothing occurs if they are online in order to keep rooms clean and updated.
+
+Arduino File Description and State Machine Diagram
+===============================================================================
+
+Button.cpp/Button.h
+-------------------------------------------------------------------------------
+This file contains the logic for the button class. This uses essentially the same code from the "Classy Button" exercise we were given earlier in the semester. 
+The button's state machine is updated using the update() method, and that returns a flag of 0 for no press, 1 for short press and 2 for long press.
+
+Texting.cpp/Texting.h
+-------------------------------------------------------------------------------
+<img src="https://i.ibb.co/RcLbgrg/Texting-state-machine.png" alt="Texting-state-machine" border="0" /></a> <nav></nav>
+This file contains the program for the texting functionality. With this functionality, a player is able to send text messages to their friends and view text messages from their friends. The states included are IDLE, ENTRY, FRIEND, QUERY, and RECEIVE. <nav></nav>
+
+In the IDLE state, when the player first uses the texting functionality, the message "Would you like to send or get a message?" is displayed on the screen along with the instructions for operating the functionality.
+If the player does a long-press with button 1, a GET request is sent to addfriend.py to obtain their friends list, and they are taken to the ENTRY state. If the player does a short-press with button 1, the same thing occurs except they are taken to the FRIEND state instead.
+If the player does not have any friends when they do the button presses, then the message "There is no one on your friends list" is displayed on their screen, and they stay in the IDLE state. <nav></nav>
+
+In the ENTRY state, the player is able to create the text message they would like to send to a friend. They are able to choose from alphanumeric characters, dashes, underscores, a space, and various punctuation. To choose
+a character to add to their message, they can utilize the IMU by tilting to their device to scroll through the characters. If they want to commit a character to their message, they can do a short-press of button 1. If they want to do a backspace and delete a character of 
+their message, they can do a short-press of button 3. If they try to backspace when there are no commited characters, they are taken back to the IDLE state. Once they have their final message, they can conduct a long-press of button 1 to send the message. They are then taken to the FRIEND state. This method is similar
+to the method used in the Wiki UI exercise. <nav></nav>
+
+In the FRIEND state, the player can choose which friend they would like to send/receive a message. They can choose a friend from their friends list by tilting their IMU to the left to scroll through their friends list.
+When they have reached the friend they would like to choose, they can do a short-press of button 1 to choose the friend. They then transition to the QUERY state. <nav></nav>
+
+The QUERY state is just a passing through state to let the user know that the request is being sent. "Sending query" is drawn on the screen while this state is being passed through. The player transitions to the RECEIVE state from this state. <nav></nav>
+
+In the RECEIVE state, if the player chose to send a message, a POST request is sent to texting_finalproject.py with the player's session ID, message, and the friend they would like to send the message to. If the player chose to receive a message, a GET request is sent to texting_finalproject.py with the player's session ID and the friend they would 
+like to get a message from. If they sent a message, the screen will show that they sent a message to their friend. If they received a message, the screen will show the message that they received. After that, they will transition back to the IDLE state.
+
+Friendrequest.cpp/Friendrequest.h
+-------------------------------------------------------------------------------
+<img src="https://i.ibb.co/cCKXGWd/Friend-request-state-machine.png" alt="Friend-request-state-machine" border="0" /></a> <nav></nav>
+This file contains the program for the friend request functionality. With this functionality, a player is able to send friend requests, view friend requests, and respond to friend requests. The states included are WAIT, ENTER, QUERIES, REQUESTS, ANSWER, and ASK. <nav></nav>
+
+In the WAIT state, when the player first uses the friend request functionality, the message "Would you like to send a friend request?" is displayed on the screen along with the instructions for operating the functionality. 
+If the player does a long-press with button 1, they transition to the ENTER state. If the player does a short-press with button 1, a GET request is sent to friendrequest.py to retrieve their friend requests. If they do not have any friend requests, they remain in the WAIT state. Otherwise,they transition to the ANSWER state. <nav></nav>
+
+In the ENTER state, the player is able to create the username of the friend they would like to send a friend request to. They are able to choose from alphanumeric characters, a dash, and an underscore. To choose
+a character to add to their request, they can utilize the IMU by tilting to their device to scroll through the characters. If they want to commit a character to their request, they can do a short-press of button 1. If they want to do a backspace and delete a character of 
+their request, they can do a short-press of button 3. If they try to backspace when there are no commited characters, they are taken back to the WAIT state. Once they have their final request, they can conduct a long-press of button 1 to send the message. They are then taken to the QUERIES state. This method is similar
+to the method used in the Wiki UI exercise. <nav></nav>
+
+The QUERIES state is just a passing through state to let the user know that the request is being sent. "Sending query" is drawn on the screen while this state is being passed through. The player transitions to the REQUESTS state from this state. <nav></nav>
+
+In the REQUESTS state, a POST request is sent to friendrequest.py with the session ID of the player and the username of the friend they sent the friend request to. They are notified that they sent a friend request through a message on their screen. They then transition back to the WAIT state. <nav></nav>
+
+In the ANSWER state, a player can answer friend requests that they are sent. They can choose a reques to answer by tilting their IMU to the left to scroll through their requests list.
+When they have reached the request they would like to choose, they can do a short-press of button 1 to accept the friend request or a long-press of button 2 to deny the request. If they do either of these things they are taken to the ASK state. If they 
+do a long-press of button 1, they do not have to answer any more friend requests and are taken back to the WAIT state. <nav></nav>
+
+In the ASK state, a POST request is sent to addfriend.py with the player's session ID, request name, and their answer to accept or deny the friend request. A GET request is then made to friendrequest.py to get the updated list of requests that the player has not yet responded to. 
+If there are no more requests, the player transitions back to the WAIT state. 
+
+Invitefriend.cpp/Invitefriend.h
+-------------------------------------------------------------------------------
+<img src="https://i.ibb.co/JqvGg8m/Invite-friend-state-machine.png" alt="Invite-friend-state-machine" border="0" style="height:500px;"/></a> <nav></nav>
+This file contains the program for sending an invitation to join a breakout room. A player can invite any of their friends to join a breakout room. The states included are HOLD, CHOOSE, PAUSE, and SENDING. <nav></nav>
+
+In the HOLD state, when the player first uses the functionality, the message "Which friend would you like to invite to a room?" is displayed on the screen along with the instructions for operating the functionality. 
+If the player does a long-press with button 1, a GET request is sent to addfriend.py to obtain their friends list, and they are taken to the CHOOSE state. If the player does not have any friends when they do the button press, then the message "There is no one on your friends list" is displayed on their screen, and they stay in the HOLD state. <nav></nav>
+
+In the CHOOSE state, the player can choose which friend they would like to send a room invitation to. They can choose a friend from their friends list by tilting their IMU to the left to scroll through their friends list.
+When they have reached the friend they would like to choose, they can do a short-press of button 1 to choose the friend. They then transition to the PAUSE state. <nav></nav>
+
+The PAUSE state is just a passing through state to let the user know that the request is being sent. "Sending query" is drawn on the screen while this state is being passed through. The player transitions to the SENDING state from this state. <nav></nav>
+
+In the SENDING state, a POST request is sent to room_management.py with the player's session ID, their friend's name they would like to invite, and the action they are doing (in this case the aciton is "invite"). They are notified that they have sent their friend 
+an invitation to their room through a message on their screen. They then transition to the HOLD state. 
+
+
+LoginInput.cpp / LoginInput.h
+-------------------------------------------------------------------------------
+This file is what allows the user to sign into our program on the ESP. The user is first shown a login screen with directions on how to input their session ID. The user then uses a tilt-to-type system to type in the session ID. There's also an added backspace functionality so that users can correct any mistakes they have made. The only characters they can input are numbers, since all session IDs are integers.
+
+When the user inputs a valid session ID, they are taken to their home screen. If the session ID does not correspond to an active user, they are redirected to the login screen.
+
+
+Room.cpp / Room.h
+-------------------------------------------------------------------------------
+The room class is what allows the users to use breakout rooms with their friends. They can join rooms that they have been invited to, invite their friends to breakout rooms, and leave breakout rooms.  
+
+When the user wants to join a room, they click the corresponding button on the room menu. The screen tells the user how to interact with their different room requests.
+
+When button 1 is clicked, a GET request is also made to the room_management.py file, which returns the list of room invites a user has. If the user has no invitations, that is displayed on the string, and the user returns to the home screen. If there are pending invites, the user can only see the most recent invite at any time. To accept the request, the user short presses button 1. To decline the rest, the user long presses button 1. After they respond to this inital request, any remaining requests will show up. If there are no remaining requests, the ESP will display that there are no invites left, and the user will return to the home screen.
+
+If the user wants to leave a room, the leave_room method is called. This method sends a POST request to the room_management.py file with the session ID, the owner of the room the user is in, and the `action=leave`. If the user is in someone else's room, this request will remove them from that room and return the user to their home screen. If the user is in their home room, they receive a warning that they cannot leave their own room. 
+
+
+Network.cpp/Network.h
+-------------------------------------------------------------------------------
+This file contains the program for connecting to one's wifi network. Its inputs are the player's wifi network and password which they manually put in. It was adapted from the code provided to us in class 
+in labs and exercises. 
+
+ServerData.cpp/ServerData.h
+-------------------------------------------------------------------------------
+The ServerData class serves as a way for the ESP to send constant requests to avatar_movement.py and thus get information about up to five avatars' customization data, usernames and locations on the screen.
+When ServerData::update is called, this information is retrieved via a post request, information about each avatar is separated using Server::parseRoomData, and then information about each avatar is stored in five AvatarData objects which can be read and interpreted in UI.ino.
+
+AvatarData.h
+-------------------------------------------------------------------------------
+The AvatarData class contains all data that might be needed to reconstruct an avatar. These are:
+
+<ol>
+  <li> head size  </li>
+  <li> color  </li>
+  <li> arm length  </li>
+  <li> torso height  </li>
+  <li> leg length  </li>
+  <li> x and y position of the head </li>
+  <li> Name of the avatar's animation </li>
+  <li> The username of the avatar  </li>
+</ol>
+
+These are all set by the function updateData(char* av_data), which takes in a sequence of comma separated values corresponding to a single avatar. 
+To parse these values, we use strtok_r, and to parse them as integers, we use atoi.
+We use strtok_r instead of strtok because strtok uses global variables, while strtok_r does not. This allows us the perform multiple strtok operations at once, since we are using multiple cores.
+
+There are also three functions in AvatarData which compare the data in AvatarData to the data currently stored in a given avatar. 
+These are avatarInfoChanged, avatarMoved and avatarAnimationChanged, which each return true if the avatar does not match the AvatarData object for the chosen parameters.
+
+Avatar.cpp/Avatar.h
+-------------------------------------------------------------------------------
+An Avatar is made up of multiple joints, corresponding to the head, left hand, right hand, left leg, right leg, neck and groin. The joints are all positioned relative to the X and and Y position of the avatar's head and according to the Avatar's current Pose.
+This pose is set depending on the frames of an avatar's animation. Each time a new animation is given to an avatar, the millis() timestamp is saved. Then, we check which pose the avatar should be in by subtracting the start timestamp from the current timestamp and applying modular arithmetic.
+
+The Avatar class contains the functions to draw the avatar using the functions createAvatar and drawInColor. To draw the avatar, each of the joints are drawn, and lines are drawn between joints (head to neck, neck to hands, etc.).
+Then, the avatar's username is drawn above using the drawString method.
+
+The functions update and move allow for the avatar's customization and position to be updated dynamically, so we do not need to make new Avatar objects.
+
+Pose.cpp/Pose.h
+-------------------------------------------------------------------------------
+The pose class is a data structure that contains the angles at which an avatar's limbs should be drawn. 
+It has arguments for the angles of an avatar's left arm, right arm, left leg, and right leg in radians. 
+
+Animation.cpp/Animation.h
+-------------------------------------------------------------------------------
+The Animation class is a data structure that contains multiple poses in a vector/dynamic array and an integer duration in milliseconds. 
+If this time limit is 0, the animation is assumed to be infinite in duration. 
+These animations are assumed to run at a set framerate of 4 FPS for simplicity.
+These Animations can be passed to an avatar to be displayed on the screen.
+
+Icon.cpp/Icon.h
+-------------------------------------------------------------------------------
+This file contains the Icon class, which is used to create the pressable buttons on the screen. Each Icon has a color, label, and set of coordinates that determine where the Icon is positioned. The Icon class also has functions to get all attributes such as label, x coordinate, y coordinate, width, and height, and also has a function to print the Icon to the screen. In our main state machine, transitions between states are dictated by the intersection of the mouse and these Icons and the press of a button. The Icon class is inherited by the Screen class where Icons are grouped by which page of the product they will be printed to. 
+
+
+Screen.cpp/Screen.h
+-------------------------------------------------------------------------------
+This file contains the class declaration for a screen class, which essentially is a container for various icons that are stored in an array. The screen class has functions printScreen() and addIcon(Icon newIcon) which are used to print all of the icons contained by the class and add new icons to the screen, respectively. The screen class is essentially just a way for us to organize the icons that we want to show up on a given page of the product, and streamline the process of printing all of the icons to the screen. The screen class allows us to quickly change which icons appear on a given page, and make sure that the correct icons are on the correct pages.
+
+
+UI.ino
+-------------------------------------------------------------------------------
+The UI file inherits all other files that are meant to be run on the ESP, and is responsible for actually instantiating all classes and deploying all features to the ESP. The main functionality of the UI file is built into our main state machine.
+
+The flow of the state machine can be seen in our system block diagram.
+
+The first state of our product is the Login state, where the user must input a valid session ID in order to move on. If they input an invalid ID, they are allowed to try again for as many tries as they want. Once they input a valid ID, they are sent to the homescreen state.
+
+In the homescreen state, the user's avatar, along with any other avatars in the room are visible and continually updated to match any changes the user or other users make on the webapp to their avatars. From the homescreen, they can choose to click on any of the three icons at the top of the screen to transition to different states. If they click on the blue "Social" icon, they are sent to the texting state. If they click on the green "Friends" icon, they are sent to the newfriend state. If they click on the red "Room" icon, they are sent to the invite state. 
+
+In the texting state, the Texting functionality is accessed. Each time the state is transitioned into, it creates a new Texting class in order to start the functionality from the beginning
+when a player accesses it again after exiting. After that, it repeatedly calls the update function of the Texting class in order to access the functionality. It also prints the various messages of the Texting class onto the screen. <nav></nav>
+
+The player can press button 2 at only point in this state to exit the functionality and the state. When this occurs, the state transitions back to the home_screen state and effectively exits the functionality. <nav></nav>
+
+In the newfriend state, the functionality to send/reply to a friend request is accessed. Each time the state is transitioned into, it creates a new Friends class in order to start the functionality from the beginning
+when a player accesses it again after exiting. After that, it repeatedly calls the update function of the Friends class in order to access the functionality. It also prints the various messages of the Friends class onto the screen. <nav></nav>
+
+The player can press button 2 at only point in this state to exit the functionality and the state. When this occurs, the state transitions back to the home_screen state and effectively exits the functionality. <nav></nav>
+
+In the invite state, the user is able to see three icons on the left side of the screen. If they click on the green "Join" icon, they enter the joining state. If they click on the blue "Invite" icon, they are sent to the invitation state. If they click on the red "Leave" icon, they are sent to the leaving state. If the user presses button 1 in the invite state, they are immediately sent to the homescreen state.
+
+In the joining state, the user can select and join a room that they have been invited to. Once they join a room in this state they are sent back to the homescreen state where they can see the other avatars who are in the same room. If the user presses button 2 in this state, they are sent back to the homescreen state as well, which allows a user to not join a room if they don't want to. 
+
+In the invitation state, the Invite Friend functionality is accessed. Each time the state is transitioned into, it creates a new Invitation class in order to start the functionality from the beginning
+when a player accesses it again after exiting. After that, it repeatedly calls the update function of the Invitation class in order to access the functionality. It also prints the various messages of the Invitation class onto the screen. <nav></nav>
+
+The player can press button 2 at only point in this state to exit the functionality and the state. When this occurs, the state transitions back to the home_screen state and effectively exits the functionality. <nav></nav>
+
+In the leaving state, the user leaves any room that they were in and is send back to the default homescreen state where there will be no other avatars on their screen and their room will be empty. If they try to leave their own room, the user is given the message "You cannot do actions onto yourself!" and must press button 2 to go back to their homescreen
+
+Weekly Milestone Demo Videos
+===============================================================================
+
+Avatar Oriented
+-------------------------------------------------------------------------------
+![Drawing Avatars](https://youtu.be/HO_NNyD0kmA)
+![Storing Avatar Position](https://youtu.be/m4RY6RZKsQI)
+<iframe src="https://drive.google.com/file/d/1rTjeBkR9H338O5oori2mn928AKmzgi3D/preview" width="640" height="480"></iframe>
+![Showing Multiple Avatars on Screen](https://youtu.be/CAaPc3olirQ)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ECswuqDJkKo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+![Adding Usernames to Avatars](https://www.youtube.com/watch?v=uyOb3lKs5Cw)
+
+Interactions Between Users
+-------------------------------------------------------------------------------
+![Texting Functionality](https://youtu.be/rPg3n3jS-lQ)
+![Friend List pt 1](https://youtu.be/aEQq9k-OGu0)
+![Friend List pt 2](https://youtu.be/9P2MJvZgQK8)
+![Room Functionality on ESP](https://youtu.be/k8ccSORZbD8)
+![Integrating Texting and Friends](https://youtu.be/jsyjixQ0TIU)
+![Room system and Back End for Multiple Users](https://youtu.be/f2QGwDbbNSo)
+
+Improvements to Existing Systems
+-------------------------------------------------------------------------------
+![Modularizing Code](https://www.youtube.com/watch?v=XZpe45xaBb4)
+![Integrating Joystick](https://www.youtube.com/watch?v=ZFWOj2o1Xtw)
+![Smoothing out Errors](https://youtu.be/8MiuGDlPHHM)
+<iframe src="https://drive.google.com/file/d/1xqGskpiZ6sVob15eh3tcojmanpea6r1d/preview" width="640" height="480"></iframe>
+
+Webapp/Server
+-------------------------------------------------------------------------------
+<iframe src="https://drive.google.com/file/d/1ox0bmJWhrusZLKswnDy0Deqn9VKhVdjg/preview" width="640" height="480"></iframe>
+![Login/Signup and Avatar Customization on Webapp](https://youtu.be/3kHOcaYn-eI)
+![Storing Avatar Data](https://youtu.be/39AP7Xh4aqc)
+![Web App + ESP Functionality](https://youtu.be/92UCLfpSJdI)
+![Cleaning up Rooms and Inactive Users](https://youtu.be/cf6aukXws3Q)
+![Webapp Signout](https://youtu.be/tge8cnbeZyk)
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js?" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
